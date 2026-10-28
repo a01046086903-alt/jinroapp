@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 꿈을 찾아라! 진로 탐험대</title>
+    <!-- Tailwind CSS (스타일링) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (아이콘) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Pretendard 폰트) -->
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <!-- html2canvas (이미지 저장 기능) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // Tailwind 커스텀 색상 및 폰트 설정
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-yellow': '#FFD166',
+                        'brand-pink': '#EF476F',
+                        'brand-blue': '#118AB2',
+                        'brand-green': '#06D6A0',
+                        'brand-dark': '#073B4C',
+                    },
+                    boxShadow: {
+                        'brutalism': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'brutalism-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+                        'brutalism-hover': '6px 6px 0px 0px rgba(0,0,0,1)',
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pop': 'pop 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F8F9FA;
+            /* 귀여운 도트 패턴 배경 */
+            background-image: radial-gradient(#E2E8F0 2px, transparent 2px);
+            background-size: 24px 24px;
+            overflow-x: hidden;
+        }
+
+        /* 공통 버튼 스타일 (네오 브루탈리즘 스타일 차용) */
+        .btn-brutal {
+            transition: all 0.2s ease;
+            border: 2px solid #000;
+        }
+        .btn-brutal:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(0,0,0,1) !important;
+        }
+
+        /* 탭 컨텐츠 숨김/표시 처리 */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 카드 스와이프 애니메이션 관련 스타일 */
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            perspective: 1000px;
+        }
+        .swipe-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform-origin: 50% 100%;
+            will-change: transform;
+        }
+        .swipe-card.swiped-left {
+            transform: translateX(-150%) rotate(-15deg);
+            opacity: 0;
+        }
+        .swipe-card.swiped-right {
+            transform: translateX(150%) rotate(15deg);
+            opacity: 0;
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        /* 포스트잇 색상 */
+        .post-it-yellow { background-color: #FEF3C7; }
+        .post-it-blue { background-color: #E0F2FE; }
+        .post-it-green { background-color: #DCFCE7; }
+        .post-it-pink { background-color: #FCE7F3; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col font-sans">
+
+    <header class="bg-white border-b-2 border-black sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-black text-brand-dark flex items-center gap-2 cursor-pointer" onclick="switchTab('home')">
+                <i class="fa-solid fa-rocket text-brand-pink animate-float"></i>
+                진로 탐험대
+            </h1>
+            <nav class="hidden md:flex gap-4">
+                <button onclick="switchTab('test')" class="nav-btn font-bold px-3 py-2 rounded-lg hover:bg-gray-100 transition">성향 테스트</button>
+                <button onclick="switchTab('explore')" class="nav-btn font-bold px-3 py-2 rounded-lg hover:bg-gray-100 transition">직업 탐색</button>
+                <button onclick="switchTab('board')" class="nav-btn font-bold px-3 py-2 rounded-lg hover:bg-gray-100 transition">목표 보드</button>
+                <button onclick="switchTab('qna')" class="nav-btn font-bold px-3 py-2 rounded-lg hover:bg-gray-100 transition">질문방</button>
+            </nav>
+            <!-- 모바일 메뉴 버튼 -->
+            <button id="mobile-menu-btn" class="md:hidden text-2xl text-black">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+        <!-- 모바일 내비게이션 -->
+        <div id="mobile-nav" class="hidden md:hidden border-t-2 border-black bg-white">
+            <div class="flex flex-col p-4 gap-2">
+                <button onclick="switchTab('test')" class="font-bold p-3 text-left border-b border-gray-200">성향 테스트</button>
+                <button onclick="switchTab('explore')" class="font-bold p-3 text-left border-b border-gray-200">직업 탐색</button>
+                <button onclick="switchTab('board')" class="font-bold p-3 text-left border-b border-gray-200">목표 보드</button>
+                <button onclick="switchTab('qna')" class="font-bold p-3 text-left">질문방</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- 홈 화면 -->
+        <section id="tab-home" class="tab-content active text-center flex flex-col items-center justify-center min-h-[70vh]">
+            <span class="px-4 py-1 bg-brand-yellow border-2 border-black rounded-full font-bold text-sm mb-4 inline-block shadow-brutalism-sm rotate-[-2deg]">중1 진로 수업용</span>
+            <h2 class="text-4xl md:text-5xl font-black mb-6 leading-tight">
+                나만의 <span class="text-brand-blue">슈퍼파워</span>를<br>찾는 여정!
+            </h2>
+            <p class="text-gray-600 mb-10 text-lg md:text-xl max-w-lg mx-auto">
+                지루한 이론은 그만! 재미있는 테스트와 카드 넘기기로 내 흥미를 알아보고 미래의 나를 그려봐요.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                <button onclick="switchTab('test')" class="btn-brutal bg-brand-pink text-white text-xl font-black py-4 px-6 rounded-xl shadow-brutalism flex flex-col items-center gap-2 group">
+                    <i class="fa-solid fa-clipboard-question text-3xl group-hover:scale-110 transition"></i>
+                    <span>성향 테스트 시작</span>
+                </button>
+                <button onclick="switchTab('explore')" class="btn-brutal bg-brand-green text-white text-xl font-black py-4 px-6 rounded-xl shadow-brutalism flex flex-col items-center gap-2 group">
+                    <i class="fa-solid fa-layer-group text-3xl group-hover:scale-110 transition"></i>
+                    <span>직업 카드 넘기기</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-test" class="tab-content">
+            <div class="bg-white border-2 border-black rounded-2xl p-6 md:p-8 shadow-brutalism max-w-2xl mx-auto relative overflow-hidden">
+                <!-- 장식 요소 -->
+                <div class="absolute -top-4 -right-4 w-20 h-20 bg-brand-yellow rounded-full border-2 border-black opacity-50 -z-10"></div>
+                
+                <div id="test-intro" class="text-center">
+                    <h2 class="text-3xl font-black mb-2">나의 흥미 유형은?</h2>
+                    <p class="text-gray-600 mb-6">간단한 5가지 질문으로 알아보는 홀랜드(Holland) 기반 흥미 테스트!</p>
+                    <button id="start-test-btn" class="btn-brutal bg-brand-blue text-white font-bold py-3 px-8 rounded-xl shadow-brutalism text-lg">
+                        테스트 시작하기
+                    </button>
+                </div>
+
+                <div id="test-questions" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="question-counter" class="font-bold text-gray-500">1 / 5</span>
+                        <div class="w-full bg-gray-200 h-2 ml-4 rounded-full overflow-hidden border border-gray-300">
+                            <div id="progress-bar" class="bg-brand-pink h-full w-1/5 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                    <h3 id="question-text" class="text-2xl font-bold mb-6 text-center mt-8">친구들과 조별 과제를 할 때 나는?</h3>
+                    <div id="options-container" class="space-y-3 flex flex-col">
+                        <!-- 옵션 버튼들이 여기에 동적으로 생성됨 -->
+                    </div>
+                </div>
+
+                <div id="test-result" class="hidden text-center">
+                    <div class="inline-block p-4 bg-brand-yellow border-2 border-black rounded-full mb-4 animate-pop">
+                        <i id="result-icon" class="fa-solid fa-lightbulb text-4xl text-black"></i>
+                    </div>
+                    <h2 class="text-3xl font-black mb-2">당신의 유형은: <span id="result-type" class="text-brand-pink">아이디어 뱅크형</span></h2>
+                    <p id="result-desc" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">창의적이고 새로운 것을 만들어내는 것을 좋아합니다. 정해진 규칙보다는 자유로운 환경에서 능력을 발휘해요.</p>
+                    <div class="mb-6">
+                        <h4 class="font-bold mb-2 text-sm text-gray-500">추천 직업군</h4>
+                        <div id="result-jobs" class="flex flex-wrap justify-center gap-2">
+                            <!-- 추천 직업 태그 생성 -->
+                        </div>
+                    </div>
+                    <button onclick="switchTab('explore')" class="btn-brutal bg-brand-green text-white font-bold py-3 px-6 rounded-xl shadow-brutalism w-full sm:w-auto">
+                        추천 직업 자세히 보기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-explore" class="tab-content">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black mb-2">직업 틴더! 직업 탐색 카드</h2>
+                <p class="text-gray-600">마음에 드는 직업은 오른쪽(O), 별로라면 왼쪽(X)으로 넘겨봐요!</p>
+            </div>
+            
+            <div class="max-w-sm mx-auto">
+                <div id="card-container" class="card-stack mb-6">
+                    <!-- 카드들이 동적으로 추가됨 -->
+                </div>
+
+                <!-- 컨트롤 버튼 -->
+                <div class="flex justify-center gap-8 px-4">
+                    <button id="btn-nope" class="w-16 h-16 rounded-full bg-white border-2 border-gray-300 text-gray-400 text-2xl shadow-md hover:bg-red-50 hover:text-red-500 hover:border-red-500 transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <button id="btn-like" class="w-16 h-16 rounded-full bg-white border-2 border-gray-300 text-gray-400 text-2xl shadow-md hover:bg-brand-green hover:text-white hover:border-brand-green transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </div>
+                <div class="text-center mt-4 text-sm text-gray-500 font-bold">
+                    <span id="liked-count" class="text-brand-pink">0</span>개의 직업에 관심이 있어요
+                </div>
+            </div>
+
+            <!-- 스와이프 완료 화면 -->
+            <div id="explore-done" class="hidden text-center bg-white border-2 border-black rounded-2xl p-8 shadow-brutalism max-w-2xl mx-auto mt-4">
+                <i class="fa-solid fa-champagne-glasses text-5xl text-brand-yellow mb-4"></i>
+                <h3 class="text-2xl font-black mb-2">탐색 완료!</h3>
+                <p class="text-gray-600 mb-6">관심 있다고 표시한 직업을 바탕으로 목표를 세워볼까요?</p>
+                <div id="liked-jobs-list" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <!-- 관심 직업 목록 -->
+                </div>
+                <button onclick="switchTab('board')" class="btn-brutal bg-brand-blue text-white font-bold py-3 px-6 rounded-xl shadow-brutalism">
+                    나의 진로 목표 보드 만들기
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-board" class="tab-content">
+             <div class="text-center mb-6">
+                <h2 class="text-3xl font-black mb-2">나의 비전 보드</h2>
+                <p class="text-gray-600">나의 꿈과 다짐을 예쁘게 꾸미고 이미지로 저장해봐요.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
+                <!-- 입력 폼 -->
+                <div class="w-full lg:w-1/3 bg-white p-6 rounded-2xl border-2 border-black shadow-brutalism h-fit">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2"><i class="fa-solid fa-pen-to-square mr-2"></i>작성하기</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">내 이름</label>
+                        <input type="text" id="board-name" placeholder="홍길동" class="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none bg-gray-50" value="중1 멋쟁이">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">나의 흥미/강점</label>
+                        <input type="text" id="board-strength" placeholder="ex) 친구들의 이야기를 잘 들어줌" class="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none bg-gray-50">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">관심 직업</label>
+                        <input type="text" id="board-dream" placeholder="ex) 심리 상담사, 유튜버" class="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none bg-gray-50">
+                        <div class="text-xs text-gray-500 mt-1">* 탐색에서 찾은 직업을 적어보세요</div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">나의 다짐 한마디!</label>
+                        <textarea id="board-motto" rows="2" placeholder="매일 책 10페이지씩 읽기!" class="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none bg-gray-50 resize-none"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">배경 테마 선택</label>
+                        <div class="flex gap-2">
+                            <button onclick="changeBoardTheme('theme-yellow')" class="w-8 h-8 rounded-full bg-brand-yellow border-2 border-black cursor-pointer"></button>
+                            <button onclick="changeBoardTheme('theme-blue')" class="w-8 h-8 rounded-full bg-brand-blue border-2 border-black cursor-pointer"></button>
+                            <button onclick="changeBoardTheme('theme-pink')" class="w-8 h-8 rounded-full bg-brand-pink border-2 border-black cursor-pointer"></button>
+                            <button onclick="changeBoardTheme('theme-dark')" class="w-8 h-8 rounded-full bg-brand-dark border-2 border-white cursor-pointer"></button>
+                        </div>
+                    </div>
+
+                    <button onclick="updateBoardPreview()" class="w-full btn-brutal bg-black text-white font-bold py-2 rounded-lg mb-2">
+                        미리보기 업데이트
+                    </button>
+                </div>
+
+                <!-- 캔버스 (결과물) -->
+                <div class="w-full lg:w-2/3 flex flex-col items-center">
+                    <!-- 캡쳐될 영역 -->
+                    <div id="capture-area" class="w-full aspect-[4/3] max-w-2xl bg-brand-yellow border-4 border-black rounded-2xl p-8 relative overflow-hidden shadow-xl transition-colors duration-300 flex flex-col justify-between">
+                        <!-- 장식 -->
+                        <div class="absolute top-4 right-4 text-4xl opacity-20"><i class="fa-solid fa-star"></i></div>
+                        <div class="absolute bottom-4 left-4 text-4xl opacity-20"><i class="fa-solid fa-plane"></i></div>
+                        
+                        <div class="text-center z-10 relative">
+                            <h2 class="text-2xl font-black mb-1 text-black bg-white inline-block px-3 py-1 rounded-full border-2 border-black transform -rotate-2">
+                                <span id="display-name">중1 멋쟁이</span>의 진로 목표 보드
+                            </h2>
+                        </div>
+
+                        <div class="flex-grow flex flex-col justify-center gap-4 z-10 relative mt-4">
+                            <div class="bg-white/90 backdrop-blur-sm p-4 rounded-xl border-2 border-black shadow-brutalism-sm transform rotate-1">
+                                <p class="text-sm font-bold text-brand-pink mb-1">✨ 나의 흥미 & 강점</p>
+                                <p id="display-strength" class="text-lg font-bold">아직 작성하지 않았어요!</p>
+                            </div>
+                            
+                            <div class="bg-white/90 backdrop-blur-sm p-4 rounded-xl border-2 border-black shadow-brutalism-sm transform -rotate-1">
+                                <p class="text-sm font-bold text-brand-blue mb-1">🎯 내가 관심 있는 직업</p>
+                                <p id="display-dream" class="text-lg font-bold text-gray-800">어떤 직업이 어울릴까요?</p>
+                            </div>
+
+                            <div class="bg-black text-white p-4 rounded-xl border-2 border-black shadow-brutalism-sm mt-2">
+                                <p class="text-sm font-bold text-gray-400 mb-1">🔥 나의 다짐</p>
+                                <p id="display-motto" class="text-xl font-black">"나는 할 수 있다!"</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right text-sm font-bold opacity-50 mt-4 z-10">
+                            진로 탐험대 앱에서 작성됨
+                        </div>
+                    </div>
+
+                    <button id="download-btn" class="mt-6 btn-brutal bg-brand-green text-white font-bold py-3 px-8 rounded-xl shadow-brutalism flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i> 내 기기에 이미지로 저장하기
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">* 저장된 이미지를 선생님이나 친구들에게 공유해보세요!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-qna" class="tab-content">
+             <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-3xl font-black mb-2">무엇이든 물어보세요!</h2>
+                    <p class="text-gray-600">진로, 진학, 직업에 대해 궁금한 점을 익명 포스트잇으로 남겨주세요.</p>
+                </div>
+                <div class="hidden sm:block text-right">
+                    <span class="text-sm font-bold bg-black text-white px-3 py-1 rounded-full"><i class="fa-solid fa-user-secret mr-1"></i>완벽 익명 보장</span>
+                </div>
+            </div>
+
+            <!-- 질문 입력창 -->
+            <div class="bg-white p-4 md:p-6 rounded-2xl border-2 border-black shadow-brutalism mb-8">
+                <form id="qna-form" class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-grow">
+                        <input type="text" id="qna-input" placeholder="ex) 고등학교 선택은 어떻게 해야 할까요?, 유튜버가 되려면 대학을 꼭 가야 하나요?" required
+                               class="w-full p-4 text-lg border-2 border-gray-300 rounded-xl focus:border-brand-pink focus:outline-none bg-gray-50">
+                    </div>
+                    <button type="submit" class="btn-brutal bg-brand-pink text-white font-bold py-4 px-8 rounded-xl shrink-0">
+                        질문 붙이기 <i class="fa-solid fa-paper-plane ml-1"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 포스트잇 대시보드 보드 (그리드) -->
+            <div class="bg-[#e8dcb8] p-6 rounded-2xl border-4 border-[#8B5A2B] shadow-inner min-h-[400px] relative">
+                <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-4 bg-gray-300 rounded-full opacity-50 shadow-sm"></div> <!-- 클립 바 인테리어 -->
+                
+                <!-- 질문들이 포스트잇 형태로 달릴 컨테이너 -->
+                <div id="qna-board" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-6">
+                    <!-- 샘플 데이터 (초기 로드용) -->
+                    <div class="post-it-yellow p-4 rounded shadow-md transform rotate-2 hover:rotate-0 transition-transform relative">
+                        <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 opacity-70"><i class="fa-solid fa-thumbtack text-red-500"></i></div>
+                        <p class="font-medium text-gray-800 mt-2">웹 개발자가 되려면 수학을 잘해야 하나요? 수포자라 걱정이에요ㅠㅠ</p>
+                        <span class="text-xs text-gray-500 mt-4 block text-right">방금 전</span>
+                    </div>
+                    <div class="post-it-blue p-4 rounded shadow-md transform -rotate-3 hover:rotate-0 transition-transform relative">
+                        <div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 opacity-70"><i class="fa-solid fa-tape text-gray-400 text-xl"></i></div>
+                        <p class="font-medium text-gray-800 mt-2">제가 뭘 좋아하는지 아직도 진짜 1도 모르겠어요. 정상인가요?</p>
+                        <span class="text-xs text-gray-500 mt-4 block text-right">5분 전</span>
+                    </div>
+                </div>
+                
+                <!-- 선생님 모드 안내 -->
+                <div class="absolute bottom-4 right-4">
+                    <button class="text-xs font-bold text-[#8B5A2B] bg-white/50 px-2 py-1 rounded border border-[#8B5A2B] hover:bg-white transition" onclick="alert('선생님용 대시보드 기능입니다. (추후 백엔드 연동 시 관리자 모드로 전환되어 답변을 달거나 화면에 크게 띄울 수 있습니다.)')">
+                        <i class="fa-solid fa-chalkboard-user"></i> 교사용 모드
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- 탭 전환 로직 ---
+        function switchTab(tabId) {
+            // 모든 탭 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 선택된 탭 보이기
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            // 모바일 메뉴 닫기
+            document.getElementById('mobile-nav').classList.add('hidden');
+            
+            // 페이지 상단으로 부드럽게 스크롤
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 탭별 특별 초기화 로직
+            if(tabId === 'explore' && !cardsInitialized) {
+                initCards();
+            }
+        }
+
+        // 모바일 메뉴 토글
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('hidden');
+        });
+
+        // --- 기능 1: 성향 테스트 로직 (홀랜드 기반 간소화) ---
+        const testQuestions = [
+            {
+                q: "자유시간이 주어지면 주로 무엇을 하고 싶나요?",
+                options: [
+                    { text: "기계나 로봇 조립, 또는 운동하기", type: "R" }, // 실재형
+                    { text: "새로운 분야의 책 읽기나 호기심 탐구", type: "I" }, // 탐구형
+                    { text: "그림 그리기, 음악 듣기, 영상 만들기", type: "A" }  // 예술형
+                ]
+            },
+            {
+                q: "친구들과 조별 과제를 할 때 나의 역할은?",
+                options: [
+                    { text: "친구들의 의견을 듣고 갈등을 조율하는 역할", type: "S" }, // 사회형
+                    { text: "조장을 맡아 프로젝트를 이끌고 발표하기", type: "E" }, // 진취형
+                    { text: "자료를 깔끔하게 정리하고 PPT 만들기", type: "C" }  // 관습형
+                ]
+            },
+            {
+                q: "내가 더 좋아하는 수업 방식은?",
+                options: [
+                    { text: "실험실에서 직접 해보는 과학 실험", type: "I" }, // 탐구형
+                    { text: "체육관이나 야외에서 몸을 움직이는 활동", type: "R" }, // 실재형
+                    { text: "정해진 규칙대로 정확하게 푸는 수학 문제", type: "C" }  // 관습형
+                ]
+            },
+            {
+                q: "어떤 종류의 동아리에 들어가고 싶나요?",
+                options: [
+                    { text: "연극, 밴드, 미술 등 창작 활동 동아리", type: "A" }, // 예술형
+                    { text: "봉사활동이나 또래 상담 동아리", type: "S" }, // 사회형
+                    { text: "학생회나 모의 창업 동아리", type: "E" }  // 진취형
+                ]
+            },
+            {
+                q: "내가 미래에 일하고 싶은 환경은?",
+                options: [
+                    { text: "자유로운 분위기에서 아이디어를 내는 곳", type: "A" },
+                    { text: "사람들과 소통하며 도움을 주는 곳", type: "S" },
+                    { text: "체계적이고 정돈된 사무실이나 시스템 속", type: "C" }
+                ]
+            }
+        ];
+
+        // 결과 타입 정의
+        const resultTypes = {
+            "R": { title: "뚝딱뚝딱 실천가형 (현실형)", desc: "몸을 움직이고 도구를 다루는 것을 좋아합니다. 눈에 보이는 구체적인 결과를 만들어내는 데 소질이 있어요.", jobs: ["드론 전문가", "건축가", "운동선수", "경찰관"], color: "text-brand-blue", icon: "fa-hammer" },
+            "I": { title: "호기심 만렙 탐구형 (탐구형)", desc: "왜 그럴까? 질문하고 관찰하는 것을 좋아합니다. 논리적이고 과학적으로 문제를 해결하는 능력이 뛰어납니다.", jobs: ["빅데이터 전문가", "과학자", "프로그래머", "의사"], color: "text-brand-green", icon: "fa-magnifying-glass" },
+            "A": { title: "자유로운 영혼 예술가형 (예술형)", desc: "상상력이 풍부하고 감수성이 예민합니다. 정해진 틀보다는 자신만의 방식으로 무언가를 표현하는 것을 즐깁니다.", jobs: ["유튜버/크리에이터", "디자이너", "웹툰 작가", "배우"], color: "text-brand-pink", icon: "fa-palette" },
+            "S": { title: "따뜻한 마음 조력자형 (사회형)", desc: "다른 사람과 함께 일하고 도와주는 것을 좋아합니다. 친절하고 이해심이 많아 주변 사람들을 편안하게 해줍니다.", jobs: ["심리 상담사", "교사", "사회복지사", "간호사"], color: "text-orange-500", icon: "fa-hand-holding-heart" },
+            "E": { title: "열정 뿜뿜 리더형 (진취형)", desc: "목표를 정하고 사람들을 이끄는 것을 좋아합니다. 설득력이 있고 활력이 넘쳐 리더 역할을 잘 해냅니다.", jobs: ["CEO/창업가", "마케터", "경영 컨설턴트", "정치인"], color: "text-red-500", icon: "fa-bullhorn" },
+            "C": { title: "꼼꼼 끝판왕 계획형 (관습형)", desc: "규칙과 체계를 따르고 정리정돈을 잘합니다. 정확하고 꼼꼼하게 일을 처리하여 믿고 맡길 수 있는 사람입니다.", jobs: ["회계사", "은행원", "데이터 분석가", "사서"], color: "text-gray-700", icon: "fa-list-check" }
+        };
+
+        let currentQuestion = 0;
+        let scores = { R:0, I:0, A:0, S:0, E:0, C:0 };
+
+        document.getElementById('start-test-btn').addEventListener('click', () => {
+            document.getElementById('test-intro').classList.add('hidden');
+            document.getElementById('test-questions').classList.remove('hidden');
+            loadQuestion();
+        });
+
+        function loadQuestion() {
+            if (currentQuestion >= testQuestions.length) {
+                showTestResult();
+                return;
+            }
+
+            const q = testQuestions[currentQuestion];
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('question-counter').innerText = `${currentQuestion + 1} / ${testQuestions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / testQuestions.length) * 100}%`;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-gray-300 hover:border-black hover:bg-gray-50 transition font-medium text-lg';
+                btn.innerText = opt.text;
+                // 약간의 시간차 등장 애니메이션
+                btn.style.animation = `fadeIn 0.3s ease forwards ${(index * 0.1)}s`;
+                btn.style.opacity = '0';
+                
+                btn.onclick = () => {
+                    scores[opt.type]++;
+                    currentQuestion++;
+                    loadQuestion();
+                };
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function showTestResult() {
+            document.getElementById('test-questions').classList.add('hidden');
+            document.getElementById('test-result').classList.remove('hidden');
+            
+            // 최고 점수 타입 찾기 (동점일 경우 임의의 첫번째)
+            let maxType = 'R';
+            let maxScore = -1;
+            for (let type in scores) {
+                if (scores[type] > maxScore) {
+                    maxScore = scores[type];
+                    maxType = type;
+                }
+            }
+            
+            const result = resultTypes[maxType];
+            
+            document.getElementById('result-type').innerText = result.title;
+            document.getElementById('result-type').className = result.color;
+            document.getElementById('result-desc').innerText = result.desc;
+            document.getElementById('result-icon').className = `fa-solid ${result.icon} text-4xl text-black`;
+            
+            const jobsContainer = document.getElementById('result-jobs');
+            jobsContainer.innerHTML = '';
+            result.jobs.forEach(job => {
+                const span = document.createElement('span');
+                span.className = 'px-3 py-1 bg-white border border-gray-300 rounded-full text-sm font-bold shadow-sm';
+                span.innerText = job;
+                jobsContainer.appendChild(span);
+            });
+
+            // 목표 보드에 자동 입력용 데이터 저장
+            document.getElementById('board-strength').value = result.desc.substring(0, 20) + "...";
+            // 초기화
+            currentQuestion = 0;
+            scores = { R:0, I:0, A:0, S:0, E:0, C:0 };
+        }
+
+        // --- STREAMING_CHUNK:기능 2: 직업 탐색 카드 (Tinder 스타일 스와이프) ---
+        const jobCardsData = [
+            { id: 1, title: "인공지능(AI) 개발자", emoji: "🤖", desc: "컴퓨터가 사람처럼 생각하도록 프로그램을 만들어요." },
+            { id: 2, title: "크리에이터/유튜버", emoji: "🎥", desc: "재미있는 영상을 기획하고 촬영, 편집하여 사람들과 소통해요." },
+            { id: 3, title: "반려동물 행동교정사", emoji: "🐕", desc: "강아지나 고양이의 마음을 이해하고 나쁜 습관을 고쳐줘요." },
+            { id: 4, title: "웹툰 작가", emoji: "✍️", desc: "그림과 글로 재미있는 이야기를 만들어 인터넷에 연재해요." },
+            { id: 5, title: "정보보안 전문가", emoji: "🛡️", desc: "해커의 공격으로부터 중요한 컴퓨터 정보와 개인정보를 지켜요." },
+            { id: 6, title: "심리 상담사", emoji: "🛋️", desc: "마음이 아프거나 고민이 있는 사람들의 이야기를 듣고 도와줘요." },
+            { id: 7, title: "게임 기획자", emoji: "🎮", desc: "어떤 게임을 만들지 규칙, 캐릭터, 스토리를 디자인해요." },
+            { id: 8, title: "환경 연구원", emoji: "🌍", desc: "지구를 아프게 하는 원인을 찾고 환경을 보호할 방법을 연구해요." }
+        ];
+
+        let cardsInitialized = false;
+        let cardElements = [];
+        let likedJobs = [];
+
+        function initCards() {
+            const container = document.getElementById('card-container');
+            container.innerHTML = '';
+            cardElements = [];
+            likedJobs = [];
+            document.getElementById('liked-count').innerText = '0';
+            document.getElementById('explore-done').classList.add('hidden');
+            
+            // 데이터 배열 뒤집기 (스택 형태로 쌓기 위해)
+            const reversedData = [...jobCardsData].reverse();
+            
+            reversedData.forEach((job, index) => {
+                const card = document.createElement('div');
+                card.className = 'swipe-card bg-white border-2 border-black rounded-2xl shadow-brutalism flex flex-col items-center justify-center p-6 text-center cursor-grab active:cursor-grabbing select-none';
+                card.dataset.id = job.id;
+                card.dataset.title = job.title;
+                
+                // 겹쳐 보이도록 스타일 조정
+                card.style.zIndex = index;
+                // 약간씩 어긋나게 쌓인 효과
+                if(index !== reversedData.length - 1) {
+                   const offset = (reversedData.length - 1 - index) * 4;
+                   card.style.transform = `translateY(${offset}px) scale(${1 - (reversedData.length - 1 - index)*0.02})`;
+                }
+                
+                card.innerHTML = `
+                    <div class="text-7xl mb-6">${job.emoji}</div>
+                    <h3 class="text-2xl font-black mb-4">${job.title}</h3>
+                    <p class="text-gray-600 font-medium">${job.desc}</p>
+                    <div class="mt-8 flex w-full justify-between px-4 opacity-50 font-bold text-sm">
+                        <span class="text-red-500"><i class="fa-solid fa-arrow-left"></i> 별로</span>
+                        <span class="text-brand-green">관심 <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+                cardElements.push(card);
+                
+                // 마우스/터치 드래그 이벤트 연결
+                attachDragEvents(card);
+            });
+            cardsInitialized = true;
+        }
+
+        function attachDragEvents(card) {
+            let isDragging = false;
+            let startX = 0;
+            let currentX = 0;
+
+            const onDragStart = (e) => {
+                // 맨 위 카드만 드래그 가능
+                if (card !== cardElements[cardElements.length - 1]) return;
+                isDragging = true;
+                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                card.style.transition = 'none'; // 드래그 중에는 부드러운 전환 효과 제거
+            };
+
+            const onDragMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault(); // 스크롤 방지
+                currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const deltaX = currentX - startX;
+                // 회전 각도 계산 (이동 거리에 비례)
+                const rotate = deltaX * 0.05;
+                card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+            };
+
+            const onDragEnd = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                
+                const deltaX = currentX - startX;
+                const threshold = window.innerWidth * 0.25; // 화면 너비의 25% 이상 움직여야 판정
+
+                if (Math.abs(deltaX) > threshold && currentX !== 0) {
+                    // 스와이프 판정
+                    if (deltaX > 0) {
+                        handleSwipe(card, 'right'); // 좋아요
+                    } else {
+                        handleSwipe(card, 'left');  // 싫어요
+                    }
+                } else {
+                    // 원위치로 복귀
+                    card.style.transform = 'translateX(0) rotate(0)';
+                }
+                currentX = 0;
+            };
+
+            card.addEventListener('mousedown', onDragStart);
+            document.addEventListener('mousemove', onDragMove); // document에 걸어 빠른 마우스 이동 대응
+            document.addEventListener('mouseup', onDragEnd);
+
+            card.addEventListener('touchstart', onDragStart, {passive: true});
+            document.addEventListener('touchmove', onDragMove, {passive: false});
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        // 버튼으로 컨트롤
+        document.getElementById('btn-nope').addEventListener('click', () => {
+            if(cardElements.length > 0) handleSwipe(cardElements[cardElements.length - 1], 'left');
+        });
+        document.getElementById('btn-like').addEventListener('click', () => {
+            if(cardElements.length > 0) handleSwipe(cardElements[cardElements.length - 1], 'right');
+        });
+
+        function handleSwipe(card, direction) {
+            if(direction === 'right') {
+                card.classList.add('swiped-right');
+                likedJobs.push(card.dataset.title);
+                document.getElementById('liked-count').innerText = likedJobs.length;
+                // 목표 보드에 자동 추가
+                const dreamInput = document.getElementById('board-dream');
+                if(dreamInput.value === '') dreamInput.value = card.dataset.title;
+                else dreamInput.value += `, ${card.dataset.title}`;
+            } else {
+                card.classList.add('swiped-left');
+            }
+
+            // 배열에서 카드 제거 (팝)
+            cardElements.pop();
+            
+            // 애니메이션 완료 후 DOM에서 제거
+            setTimeout(() => {
+                card.remove();
+                
+                // 모든 카드를 소진했을 경우
+                if(cardElements.length === 0) {
+                    document.getElementById('explore-done').classList.remove('hidden');
+                    const likedList = document.getElementById('liked-jobs-list');
+                    likedList.innerHTML = '';
+                    if(likedJobs.length === 0) {
+                        likedList.innerHTML = '<span class="text-gray-500">관심 있는 직업을 고르지 않았네요. 다시 탐색해볼까요?</span>';
+                    } else {
+                        likedJobs.forEach(job => {
+                            const span = document.createElement('span');
+                            span.className = 'px-3 py-1 bg-brand-yellow border-2 border-black rounded-full font-bold shadow-brutalism-sm';
+                            span.innerText = job;
+                            likedList.appendChild(span);
+                        });
+                    }
+                } else {
+                    // 남은 카드의 z-index 및 크기 재조정
+                    cardElements.forEach((c, index) => {
+                       c.style.transition = 'transform 0.3s ease';
+                       if(index === cardElements.length - 1) {
+                           c.style.transform = 'translateY(0) scale(1)';
+                       } else {
+                           const offset = (cardElements.length - 1 - index) * 4;
+                           c.style.transform = `translateY(${offset}px) scale(${1 - (cardElements.length - 1 - index)*0.02})`;
+                       }
+                    });
+                }
+            }, 300);
+        }
+
+
+        // --- STREAMING_CHUNK:기능 3: 비전 보드 로직 ---
+        const boardArea = document.getElementById('capture-area');
+        const themeColors = {
+            'theme-yellow': { bg: 'bg-brand-yellow', text: 'text-black', boxText: 'text-gray-800' },
+            'theme-blue': { bg: 'bg-brand-blue', text: 'text-white', boxText: 'text-white' },
+            'theme-pink': { bg: 'bg-brand-pink', text: 'text-white', boxText: 'text-white' },
+            'theme-dark': { bg: 'bg-brand-dark', text: 'text-white', boxText: 'text-white' }
+        };
+
+        function changeBoardTheme(themeName) {
+            // 기존 테마 클래스 제거
+            boardArea.className = boardArea.className.replace(/bg-brand-[a-z]+/g, '');
+            // 새 테마 추가
+            boardArea.classList.add(themeColors[themeName].bg);
+            
+            // 특정 테마(어두운색)일때 텍스트 색상 조정 (선택적)
+            const titleSpan = boardArea.querySelector('h2 span');
+            if(themeName === 'theme-dark' || themeName === 'theme-blue') {
+                 // 추가적인 스타일 조정을 할 수 있습니다.
+            }
+        }
+
+        // 입력 폼에 따라 보드 업데이트
+        function updateBoardPreview() {
+            const name = document.getElementById('board-name').value || '중1 멋쟁이';
+            const strength = document.getElementById('board-strength').value || '아직 찾고 있어요';
+            const dream = document.getElementById('board-dream').value || '무한한 가능성!';
+            const motto = document.getElementById('board-motto').value || '"나는 뭐든 될 수 있어!"';
+
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('display-strength').innerText = strength;
+            document.getElementById('display-dream').innerText = dream;
+            document.getElementById('display-motto').innerText = motto;
+        }
+        
+        // 입력 칸 값이 변경될 때마다 자동 업데이트 (실시간 반응형)
+        document.getElementById('board-name').addEventListener('input', updateBoardPreview);
+        document.getElementById('board-strength').addEventListener('input', updateBoardPreview);
+        document.getElementById('board-dream').addEventListener('input', updateBoardPreview);
+        document.getElementById('board-motto').addEventListener('input', updateBoardPreview);
+
+        // html2canvas를 이용한 이미지 저장 기능
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const btn = document.getElementById('download-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 이미지 생성 중...';
+            btn.disabled = true;
+
+            // 이미지가 로드될 시간을 약간 주기 위해 setTimeout 사용
+            setTimeout(() => {
+                html2canvas(document.getElementById('capture-area'), {
+                    scale: 2, // 고해상도
+                    backgroundColor: null, // 투명 배경 허용
+                    useCORS: true // 외부 폰트/이미지 렌더링 지원
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `나의_진로목표보드_${Date.now()}.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                    
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> 저장 완료!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+                }).catch(err => {
+                    console.error("캡쳐 에러:", err);
+                    alert("이미지 저장 중 오류가 발생했습니다.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }, 100);
+        });
+
+
+        // --- STREAMING_CHUNK:기능 4: 익명 질문방 로직 ---
+        const qnaForm = document.getElementById('qna-form');
+        const qnaInput = document.getElementById('qna-input');
+        const qnaBoard = document.getElementById('qna-board');
+        
+        const postItColors = ['post-it-yellow', 'post-it-blue', 'post-it-green', 'post-it-pink'];
+
+        qnaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = qnaInput.value.trim();
+            if(!text) return;
+
+            // 랜덤 스타일 적용
+            const colorClass = postItColors[Math.floor(Math.random() * postItColors.length)];
+            // -3도에서 3도 사이의 랜덤 회전
+            const rotation = Math.floor(Math.random() * 7) - 3; 
+            
+            const postIt = document.createElement('div');
+            postIt.className = `${colorClass} p-4 rounded shadow-md transition-transform relative animate-pop`;
+            postIt.style.transform = `rotate(${rotation}deg)`;
+            
+            // 핀 모양 랜덤 (압정 or 테이프)
+            const pinHtml = Math.random() > 0.5 
+                ? `<div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 opacity-70"><i class="fa-solid fa-thumbtack text-red-500"></i></div>`
+                : `<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 opacity-70"><i class="fa-solid fa-tape text-gray-400 text-xl"></i></div>`;
+
+            postIt.innerHTML = `
+                ${pinHtml}
+                <p class="font-medium text-gray-800 mt-2 whitespace-pre-wrap">${text}</p>
+                <span class="text-xs text-gray-500 mt-4 block text-right">방금 전</span>
+            `;
+
+            // 맨 앞에 추가 (최신순)
+            qnaBoard.insertBefore(postIt, qnaBoard.firstChild);
+            
+            // 입력창 초기화
+            qnaInput.value = '';
+            
+            // 호버 이펙트 추가 (마우스 오버시 똑바로 펴짐)
+            postIt.addEventListener('mouseenter', () => postIt.style.transform = 'rotate(0deg) scale(1.05) z-index:10');
+            postIt.addEventListener('mouseleave', () => postIt.style.transform = `rotate(${rotation}deg) scale(1) z-index:1`);
+        });
+        
+    </script>
+</body>
+</html>
